@@ -26,6 +26,9 @@ main{padding:16px}
 .card p{margin:0 0 14px;color:var(--muted)}
 .card label{display:block;margin:10px 0 4px}
 .card .row{display:flex;gap:8px;margin-top:14px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{flex:1;padding:9px;color:var(--muted);font-weight:600}
+.tab.active{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
 .err{color:var(--danger);margin-top:10px;min-height:18px}
 .msg{color:var(--ok);margin-top:10px;min-height:18px}
 .banner{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin:0 auto 12px;max-width:420px}
@@ -77,14 +80,17 @@ dialog label{display:block;margin:10px 0 4px}
 <section id="authView">
   <div id="cfgBanner" class="banner hidden">Config Firebase mancante: apri index.html e incolla la tua firebaseConfig in cima allo script.</div>
   <form class="card" id="authForm">
-    <h2>Accedi</h2>
+    <div class="tabs">
+      <button type="button" class="tab active" id="tabLogin">Accedi</button>
+      <button type="button" class="tab" id="tabSignup">Registrati</button>
+    </div>
+    <p id="authHint">Hai già un account: entra con email e password.</p>
     <label>Email</label>
     <input id="email" type="email" autocomplete="username" required>
     <label>Password</label>
     <input id="password" type="password" autocomplete="current-password" required minlength="6">
     <div class="row">
-      <button type="submit" class="primary" id="btnLogin">Accedi</button>
-      <button type="button" id="btnSignup">Registrati</button>
+      <button type="submit" class="primary" id="btnSubmit">Accedi</button>
     </div>
     <button type="button" class="link" id="btnReset">Password dimenticata?</button>
     <div id="authErr" class="err"></div>
@@ -208,16 +214,24 @@ function showErr(e) {
   $('#authErr').textContent = ERR[e.code] || ('Errore: ' + (e.code || e.message));
 }
 function creds() { return [$('#email').value.trim(), $('#password').value]; }
+let mode = 'login';
+function setMode(m) {
+  mode = m;
+  $('#tabLogin').classList.toggle('active', m === 'login');
+  $('#tabSignup').classList.toggle('active', m === 'signup');
+  $('#btnSubmit').textContent = m === 'login' ? 'Accedi' : 'Crea account';
+  $('#authHint').textContent = m === 'login' ? 'Hai già un account: entra con email e password.' : 'Prima volta: scegli email e password (min 6 caratteri).';
+  $('#authErr').textContent = ''; $('#authMsg').textContent = '';
+}
+$('#tabLogin').onclick = () => setMode('login');
+$('#tabSignup').onclick = () => setMode('signup');
 $('#authForm').onsubmit = async e => {
   e.preventDefault(); if (!auth) return;
   const [em, pw] = creds();
-  try { await auth.signInWithEmailAndPassword(em, pw); } catch (err) { showErr(err); }
-};
-$('#btnSignup').onclick = async () => {
-  if (!auth) return;
-  const [em, pw] = creds();
-  if (!em || !pw) return showErr({ code: 'auth/missing-password' });
-  try { await auth.createUserWithEmailAndPassword(em, pw); } catch (err) { showErr(err); }
+  try {
+    if (mode === 'login') await auth.signInWithEmailAndPassword(em, pw);
+    else await auth.createUserWithEmailAndPassword(em, pw);
+  } catch (err) { showErr(err); }
 };
 $('#btnReset').onclick = async () => {
   if (!auth) return;
