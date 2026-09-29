@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Matrice RICE</title>
+<style>
+:root{--bg:#f4f5f7;--card:#ffffff;--text:#1a1d21;--muted:#6b7280;--border:#d9dde3;--th:#eceff3;--accent:#2563eb;--accent-text:#fff;--danger:#dc2626;--ok:#16a34a;--input:#fff}
+[data-theme="dark"]{--bg:#0f1115;--card:#181b21;--text:#e6e8eb;--muted:#9aa0a6;--border:#2b3038;--th:#1f232a;--accent:#3b82f6;--danger:#f87171;--ok:#4ade80;--input:#12151a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button{font:inherit;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:6px;padding:7px 12px}
+button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+button.link{border:0;background:none;color:var(--accent);padding:4px 0;text-decoration:underline}
+input,select,textarea{font:inherit;color:var(--text);background:var(--input);border:1px solid var(--border);border-radius:5px;padding:6px 7px;width:100%}
+textarea{min-height:58px;resize:vertical}
+.hidden{display:none !important}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}
+header .team{color:var(--muted);cursor:pointer}
+header .spacer{flex:1}
+.status{color:var(--muted);font-size:13px;min-width:90px}
+main{padding:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:420px;margin:60px auto}
+.card h2{margin:0 0 6px;font-size:20px}
+.card p{margin:0 0 14px;color:var(--muted)}
+.card label{display:block;margin:10px 0 4px}
+.card .row{display:flex;gap:8px;margin-top:14px}
+.err{color:var(--danger);margin-top:10px;min-height:18px}
+.msg{color:var(--ok);margin-top:10px;min-height:18px}
+.banner{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin:0 auto 12px;max-width:420px}
+.legend{color:var(--muted);margin:0 0 10px}
+details{margin:0 0 12px;color:var(--muted)}
+details summary{cursor:pointer;color:var(--text)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;min-width:1900px;width:100%}
+th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:6px;vertical-align:top;text-align:left}
+th{background:var(--th);position:sticky;top:0;font-weight:600;white-space:nowrap}
+tr.group th{text-align:center;color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.5px}
+td.num,td.tot{text-align:center;font-weight:600;padding-top:12px}
+td.tot{color:var(--accent);font-size:16px}
+th.help{cursor:help;text-decoration:underline dotted}
+col.c-status{width:170px}col.c-desc{width:300px}col.c-score{width:72px}col.c-tot{width:70px}col.c-order{width:80px}col.c-who{width:150px}col.c-text{width:260px}col.c-cost{width:110px}col.c-out{width:150px}col.c-del{width:44px}col.c-num{width:40px}
+button.del{color:var(--danger);padding:4px 8px}
+dialog{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:20px;width:360px;max-width:92vw}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog label{display:block;margin:10px 0 4px}
+@media print{
+  @page{size:landscape;margin:8mm}
+  header button,.toolbar,.status,details,button.del{display:none !important}
+  header{position:static;border:0}
+  main{padding:0}
+  .wrap{overflow:visible;border:0}
+  table{min-width:0;font-size:10px}
+  th,td{padding:3px}
+  input,select,textarea{border:0;background:none;padding:0;min-height:0;resize:none}
+  select{appearance:none}
+}
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <h1>Matrice RICE</h1>
+  <span class="spacer"></span>
+  <span id="saveStatus" class="status hidden"></span>
+  <button id="btnTheme" title="Tema chiaro / scuro">◐</button>
+  <button id="btnLogout" class="hidden">Esci</button>
+</header>
+
+<main>
+
+<!-- LOGIN -->
+<section id="authView">
+  <div id="cfgBanner" class="banner hidden">Config Firebase mancante: apri index.html e incolla la tua firebaseConfig in cima allo script.</div>
+  <form class="card" id="authForm">
+    <h2>Accedi</h2>
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label>Password</label>
+    <input id="password" type="password" autocomplete="current-password" required minlength="6">
+    <div class="row">
+      <button type="submit" class="primary" id="btnLogin">Accedi</button>
+    </div>
+    <button type="button" class="link" id="btnReset">Password dimenticata?</button>
+    <div id="authErr" class="err"></div>
+    <div id="authMsg" class="msg"></div>
+  </form>
+</section>
+
+<!-- APP -->
+<section id="appView" class="hidden">
+  <p class="legend">Punteggi da 1 a 5. Effort: 5 = costa poco tempo e denaro. Totale = Reach + Impact + Confidence + Effort (min 4, max 20).</p>
+  <details>
+    <summary>Istruzioni</summary>
+    <p>Scrivete tutto ciò che vi viene in mente e che può aiutarvi a validare il problema. Meglio se lo sprint dura 1 settimana ed è rivolto il più possibile al target (early adopter).<br>
+    SPRINT: termine tecnico per il tempo assegnato a ogni esperimento. In questa fase ogni esperimento andrebbe completato entro massimo 1 settimana / 10 giorni da quando è stato approvato.</p>
+  </details>
+  <div class="toolbar">
+    <button class="primary" id="btnAdd">+ Aggiungi esperimento</button>
+    <button id="btnSort">Ordina per totale</button>
+    <button id="btnPrint">Stampa / PDF</button>
+  </div>
+  <div class="wrap">
+  <table>
+    <colgroup>
+      <col class="c-num"><col class="c-status"><col class="c-desc">
+      <col class="c-score"><col class="c-score"><col class="c-score"><col class="c-score"><col class="c-tot">
+      <col class="c-order"><col class="c-who"><col class="c-text"><col class="c-text"><col class="c-cost"><col class="c-out"><col class="c-del">
+    </colgroup>
+    <thead>
+      <tr class="group"><th colspan="3"></th><th colspan="5">PUNTEGGIO</th><th colspan="6">ESECUZIONE</th><th></th></tr>
+      <tr>
+        <th>#</th>
+        <th>Stato</th>
+        <th>Descrizione esperimento</th>
+        <th class="help" title="Quante persone del target raggiungerete con questo esperimento? 1 basso, 5 alto">Reach</th>
+        <th class="help" title="Quanto impatto avrà questo esperimento nel vostro processo di discovery? 1 basso, 5 alto">Impact</th>
+        <th class="help" title="Quanto siete sicuri di riuscire a completare questo esperimento? 1 basso, 5 alto">Confidence</th>
+        <th class="help" title="Quanto tempo e denaro vi costerà? 1 male, 5 bene (es. costa nulla e poco tempo = 5)">Effort</th>
+        <th>Totale</th>
+        <th class="help" title="Ordine di esecuzione deciso dal team">Ordine</th>
+        <th>Chi lo esegue</th>
+        <th>Risultati attesi</th>
+        <th>Highlights post esperimento (con numeri)</th>
+        <th>Costo finale</th>
+        <th>Esito</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+// ===================== 1. INCOLLA QUI LA CONFIG FIREBASE =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyCPcki6Kos7ON0alez2uikaBaB40dBc0Ho",
+  authDomain: "rice-matrix.firebaseapp.com",
+  projectId: "rice-matrix",
+  storageBucket: "rice-matrix.firebasestorage.app",
+  messagingSenderId: "68901233045",
+  appId: "1:68901233045:web:fdf27829f2f5a573d8d69c"
+};
+// ============================================================================
+
+const $ = s => document.querySelector(s);
+const STATUS = ['', 'In discussione nel team', 'Approvato e assegnato', 'In corso', 'Terminato'];
+const OUTCOME = ['', 'In elaborazione', 'Fallito', 'Successo'];
+const SCORES = ['reach', 'impact', 'conf', 'effort'];
+const ERR = {
+  'auth/invalid-email': 'Email non valida',
+  'auth/user-not-found': 'Account non trovato',
+  'auth/wrong-password': 'Password errata',
+  'auth/invalid-credential': 'Email o password errate',
+  'auth/email-already-in-use': 'Email già registrata: usa Accedi',
+  'auth/weak-password': 'Password troppo corta (min 6 caratteri)',
+  'auth/missing-password': 'Inserisci la password',
+  'auth/too-many-requests': 'Troppi tentativi, riprova tra poco',
+  'auth/network-request-failed': 'Problema di rete'
+};
+
+// ---------- tema ----------
+const root = document.documentElement;
+function applyTheme(t) { root.dataset.theme = t; try { localStorage.setItem('theme', t); } catch (e) {} }
+(function () {
+  let t = null; try { t = localStorage.getItem('theme'); } catch (e) {}
+  if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  root.dataset.theme = t;
+})();
+$('#btnTheme').onclick = () => applyTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');
+
+// ---------- firebase ----------
+const CONFIG_OK = !String(firebaseConfig.apiKey).startsWith('INCOLLA');
+if (!CONFIG_OK) { $('#cfgBanner').classList.remove('hidden'); }
+let auth = null, db = null;
+if (CONFIG_OK) {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+}
+
+// ---------- stato ----------
+let uid = null;
+let data = { rows: [] };
+let saveTimer = null;
+
+const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const newRow = () => ({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), status: '', desc: '', reach: '', impact: '', conf: '', effort: '', order: '', who: '', expected: '', highlights: '', cost: '', outcome: '' });
+const byId = id => data.rows.find(r => r.id === id);
+function total(r) {
+  const v = SCORES.map(f => Number(r[f]));
+  return v.some(x => !x) ? '' : v.reduce((a, b) => a + b, 0);
+}
+
+// ---------- auth ui ----------
+function showErr(e) {
+  $('#authMsg').textContent = '';
+  $('#authErr').textContent = ERR[e.code] || ('Errore: ' + (e.code || e.message));
+}
+function creds() { return [$('#email').value.trim(), $('#password').value]; }
+$('#authForm').onsubmit = async e => {
+  e.preventDefault(); if (!auth) return;
+  const [em, pw] = creds();
+  try { await auth.signInWithEmailAndPassword(em, pw); } catch (err) { showErr(err); }
+};
+$('#btnReset').onclick = async () => {
+  if (!auth) return;
+  const em = $('#email').value.trim();
+  if (!em) return showErr({ code: 'auth/invalid-email' });
+  try { await auth.sendPasswordResetEmail(em); $('#authErr').textContent = ''; $('#authMsg').textContent = 'Email inviata. Controlla la posta (anche spam).'; }
+  catch (err) { showErr(err); }
+};
+$('#btnLogout').onclick = () => auth.signOut();
+
+if (auth) auth.onAuthStateChanged(async user => {
+  if (user) { uid = user.uid; await load(); }
+  else {
+    uid = null; data = { rows: [] };
+    $('#appView').classList.add('hidden'); $('#authView').classList.remove('hidden');
+    $('#btnLogout').classList.add('hidden'); $('#saveStatus').classList.add('hidden');
+  }
+});
+
+// ---------- dati ----------
+async function load() {
+  try {
+    const snap = await db.collection('teams').doc(uid).get();
+    data = Object.assign({ rows: [] }, snap.exists ? snap.data() : {});
+    if (!Array.isArray(data.rows)) data.rows = [];
+  } catch (e) { console.error(e); alert('Errore nel caricamento dei dati: ' + e.message); return; }
+  if (!data.rows.length) data.rows.push(newRow());
+  $('#authView').classList.add('hidden'); $('#appView').classList.remove('hidden');
+  $('#btnLogout').classList.remove('hidden'); $('#saveStatus').classList.remove('hidden');
+  setStatus('Salvato ✓');
+  render();
+}
+function setStatus(t) { $('#saveStatus').textContent = t; }
+function scheduleSave() { setStatus('Salvataggio…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 700); }
+async function save() {
+  saveTimer = null;
+  try {
+    await db.collection('teams').doc(uid).set({
+      rows: data.rows,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    setStatus('Salvato ✓');
+  } catch (e) { console.error(e); setStatus('Errore salvataggio'); }
+}
+window.addEventListener('pagehide', () => { if (saveTimer) { clearTimeout(saveTimer); save(); } });
+
+// ---------- render ----------
+function sel(r, f, opts) {
+  return `<select data-f="${f}">` + opts.map(o => `<option value="${h(o)}"${o === (r[f] || '') ? ' selected' : ''}>${h(o) || '-'}</option>`).join('') + '</select>';
+}
+function rowHtml(r, i) {
+  const score = f => sel(r, f, ['', '1', '2', '3', '4', '5']);
+  const ta = (f, ph) => `<textarea data-f="${f}" placeholder="${ph}">${h(r[f])}</textarea>`;
+  const inp = (f, ph, type) => `<input type="${type || 'text'}" data-f="${f}" placeholder="${ph}" value="${h(r[f])}">`;
+  return `<tr data-id="${r.id}">
+    <td class="num">${i + 1}</td>
+    <td>${sel(r, 'status', STATUS)}</td>
+    <td>${ta('desc', 'Cosa fate, con chi, come')}</td>
+    <td>${score('reach')}</td><td>${score('impact')}</td><td>${score('conf')}</td><td>${score('effort')}</td>
+    <td class="tot">${total(r)}</td>
+    <td>${inp('order', '', 'number')}</td>
+    <td>${inp('who', 'Nome')}</td>
+    <td>${ta('expected', '')}</td>
+    <td>${ta('highlights', '')}</td>
+    <td>${inp('cost', '€')}</td>
+    <td>${sel(r, 'outcome', OUTCOME)}</td>
+    <td><button class="del" title="Elimina esperimento">✕</button></td>
+  </tr>`;
+}
+function render() { $('#rows').innerHTML = data.rows.map(rowHtml).join(''); }
+
+const tbody = $('#rows');
+function onEdit(e) {
+  const f = e.target.dataset.f; if (!f) return;
+  const tr = e.target.closest('tr'); const r = byId(tr.dataset.id); if (!r) return;
+  r[f] = e.target.value;
+  if (SCORES.includes(f)) tr.querySelector('.tot').textContent = total(r);
+  scheduleSave();
+}
+tbody.addEventListener('input', onEdit);
+tbody.addEventListener('change', onEdit);
+tbody.addEventListener('click', e => {
+  const b = e.target.closest('button.del'); if (!b) return;
+  if (!confirm('Eliminare questo esperimento?')) return;
+  const id = b.closest('tr').dataset.id;
+  data.rows = data.rows.filter(r => r.id !== id);
+  if (!data.rows.length) data.rows.push(newRow());
+  render(); scheduleSave();
+});
+
+$('#btnAdd').onclick = () => {
+  data.rows.push(newRow()); render(); scheduleSave();
+  const last = tbody.lastElementChild; last.querySelector('textarea').focus(); last.scrollIntoView({ block: 'nearest' });
+};
+$('#btnSort').onclick = () => {
+  data.rows.sort((a, b) => (Number(total(b)) || 0) - (Number(total(a)) || 0));
+  render(); scheduleSave();
+};
+$('#btnPrint').onclick = () => window.print();
+
+</script>
+</body>
+</html>
