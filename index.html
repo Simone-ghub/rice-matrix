@@ -18,7 +18,6 @@ textarea{min-height:58px;resize:vertical}
 .hidden{display:none !important}
 header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 header h1{font-size:18px;margin:0}
-header .team{color:var(--muted);cursor:pointer}
 header .spacer{flex:1}
 .status{color:var(--muted);font-size:13px;min-width:90px}
 main{padding:16px}
@@ -35,21 +34,23 @@ details{margin:0 0 12px;color:var(--muted)}
 details summary{cursor:pointer;color:var(--text)}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--border);border-radius:10px}
-table{border-collapse:collapse;min-width:1900px;width:100%}
+table{border-collapse:collapse;min-width:2300px;width:100%}
 th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:6px;vertical-align:top;text-align:left}
-th{background:var(--th);position:sticky;top:0;font-weight:600;white-space:nowrap}
+th{background:var(--th);position:sticky;top:0;font-weight:600;white-space:normal;vertical-align:top}
+.hint{font-weight:400;color:var(--muted);font-size:11px;line-height:1.3;margin-top:3px}
+.box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:0 0 12px;color:var(--muted)}
+.box b{color:var(--text)}
 tr.group th{text-align:center;color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.5px}
 td.num,td.tot{text-align:center;font-weight:600;padding-top:12px}
 td.tot{color:var(--accent);font-size:16px}
-th.help{cursor:help;text-decoration:underline dotted}
-col.c-status{width:170px}col.c-desc{width:300px}col.c-score{width:72px}col.c-tot{width:70px}col.c-order{width:80px}col.c-who{width:150px}col.c-text{width:260px}col.c-cost{width:110px}col.c-out{width:150px}col.c-del{width:44px}col.c-num{width:40px}
+col.c-status{width:170px}col.c-desc{width:300px}col.c-score{width:150px}col.c-tot{width:70px}col.c-order{width:80px}col.c-who{width:150px}col.c-text{width:260px}col.c-cost{width:110px}col.c-out{width:150px}col.c-del{width:44px}col.c-num{width:40px}
 button.del{color:var(--danger);padding:4px 8px}
 dialog{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:20px;width:360px;max-width:92vw}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog label{display:block;margin:10px 0 4px}
 @media print{
   @page{size:landscape;margin:8mm}
-  header button,.toolbar,.status,details,button.del{display:none !important}
+  header button,.toolbar,.status,button.del{display:none !important}
   header{position:static;border:0}
   main{padding:0}
   .wrap{overflow:visible;border:0}
@@ -64,7 +65,6 @@ dialog label{display:block;margin:10px 0 4px}
 
 <header id="topbar">
   <h1>Matrice RICE</h1>
-  <span id="teamLabel" class="team hidden" title="Modifica team"></span>
   <span class="spacer"></span>
   <span id="saveStatus" class="status hidden"></span>
   <button id="btnTheme" title="Tema chiaro / scuro">◐</button>
@@ -77,9 +77,8 @@ dialog label{display:block;margin:10px 0 4px}
 <section id="authView">
   <div id="cfgBanner" class="banner hidden">Config Firebase mancante: apri index.html e incolla la tua firebaseConfig in cima allo script.</div>
   <form class="card" id="authForm">
-    <h2>Accesso team</h2>
-    <p>Un account per team. Condividete email e password con i compagni.</p>
-    <label>Email del team</label>
+    <h2>Accedi</h2>
+    <label>Email</label>
     <input id="email" type="email" autocomplete="username" required>
     <label>Password</label>
     <input id="password" type="password" autocomplete="current-password" required minlength="6">
@@ -95,16 +94,14 @@ dialog label{display:block;margin:10px 0 4px}
 <!-- APP -->
 <section id="appView" class="hidden">
   <p class="legend">Punteggi da 1 a 5. Effort: 5 = costa poco tempo e denaro. Totale = Reach + Impact + Confidence + Effort (min 4, max 20).</p>
-  <details>
-    <summary>Istruzioni</summary>
-    <p>Scrivete tutto ciò che vi viene in mente e che può aiutarvi a validare il problema. Meglio se lo sprint dura 1 settimana ed è rivolto il più possibile al target (early adopter).<br>
-    SPRINT: termine tecnico per il tempo assegnato a ogni esperimento. In questa fase ogni esperimento andrebbe completato entro massimo 1 settimana / 10 giorni da quando è stato approvato.</p>
-  </details>
+  <div class="box">
+    <b>Cosa scrivere:</b> tutto ciò che vi viene in mente e che può aiutarvi a validare il problema. Meglio se lo sprint dura 1 settimana ed è rivolto il più possibile al target (early adopter).<br>
+    <b>SPRINT:</b> termine tecnico per il tempo assegnato a ogni esperimento. In questa fase ogni esperimento andrebbe completato entro massimo 1 settimana / 10 giorni da quando è stato approvato.
+  </div>
   <div class="toolbar">
     <button class="primary" id="btnAdd">+ Aggiungi esperimento</button>
     <button id="btnSort">Ordina per totale</button>
     <button id="btnPrint">Stampa / PDF</button>
-    <button id="btnProfile">Team</button>
   </div>
   <div class="wrap">
   <table>
@@ -117,19 +114,19 @@ dialog label{display:block;margin:10px 0 4px}
       <tr class="group"><th colspan="3"></th><th colspan="5">PUNTEGGIO</th><th colspan="6">ESECUZIONE</th><th></th></tr>
       <tr>
         <th>#</th>
-        <th>Stato</th>
-        <th>Descrizione esperimento</th>
-        <th class="help" title="Quante persone del target raggiungerete con questo esperimento? 1 basso, 5 alto">Reach</th>
-        <th class="help" title="Quanto impatto avrà questo esperimento nel vostro processo di discovery? 1 basso, 5 alto">Impact</th>
-        <th class="help" title="Quanto siete sicuri di riuscire a completare questo esperimento? 1 basso, 5 alto">Confidence</th>
-        <th class="help" title="Quanto tempo e denaro vi costerà? 1 male, 5 bene (es. costa nulla e poco tempo = 5)">Effort</th>
-        <th>Totale</th>
-        <th class="help" title="Ordine di esecuzione deciso dal team">Ordine</th>
-        <th>Chi lo esegue</th>
-        <th>Risultati attesi</th>
-        <th>Highlights post esperimento (con numeri)</th>
-        <th>Costo finale</th>
-        <th>Esito</th>
+        <th>Stato<div class="hint">A che punto è l'esperimento</div></th>
+        <th>Descrizione esperimento<div class="hint">Cosa fate, con chi, come. Tutto ciò che può aiutarvi a validare il problema</div></th>
+        <th>Reach<div class="hint">Quante persone del target raggiungerete con questo esperimento?<br>1 basso, 5 alto</div></th>
+        <th>Impact<div class="hint">Quanto impatto avrà questo esperimento nel vostro processo di discovery?<br>1 basso, 5 alto</div></th>
+        <th>Confidence<div class="hint">Quanto siete sicuri di riuscire a completare questo esperimento?<br>1 basso, 5 alto</div></th>
+        <th>Effort<div class="hint">Quanto tempo e denaro vi costerà?<br>1 male, 5 bene (es. costa nulla e poco tempo = 5)</div></th>
+        <th>Totale<div class="hint">Somma dei 4 punteggi<br>min 4, max 20</div></th>
+        <th>Ordine<div class="hint">Ordine di esecuzione che decidete voi</div></th>
+        <th>Chi lo esegue<div class="hint">Chi si occupa di questo esperimento</div></th>
+        <th>Risultati attesi<div class="hint">Cosa vi aspettate di scoprire, prima di farlo</div></th>
+        <th>Highlights post esperimento<div class="hint">Cosa avete scoperto, con qualche numero</div></th>
+        <th>Costo finale<div class="hint">Quanto è costato davvero</div></th>
+        <th>Esito<div class="hint">Successo, fallito o ancora in elaborazione</div></th>
         <th></th>
       </tr>
     </thead>
@@ -139,20 +136,6 @@ dialog label{display:block;margin:10px 0 4px}
 </section>
 
 </main>
-
-<dialog id="profileDlg">
-  <form method="dialog">
-    <h2 style="margin:0 0 4px;font-size:18px">Il vostro team</h2>
-    <label>Nome del team</label>
-    <input id="teamName" maxlength="60">
-    <label>Corso / classe</label>
-    <input id="course" maxlength="60">
-    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
-      <button type="button" id="profileCancel">Annulla</button>
-      <button type="submit" class="primary" id="profileSave">Salva</button>
-    </div>
-  </form>
-</dialog>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -170,7 +153,7 @@ const firebaseConfig = {
 // ============================================================================
 
 const $ = s => document.querySelector(s);
-const STATUS = ['', 'In discussione nel team', 'Approvato e assegnato', 'In corso', 'Terminato'];
+const STATUS = ['', 'In discussione', 'Approvato e assegnato', 'In corso', 'Terminato'];
 const OUTCOME = ['', 'In elaborazione', 'Fallito', 'Successo'];
 const SCORES = ['reach', 'impact', 'conf', 'effort'];
 const ERR = {
@@ -207,7 +190,7 @@ if (CONFIG_OK) {
 
 // ---------- stato ----------
 let uid = null;
-let data = { teamName: '', course: '', rows: [] };
+let data = { rows: [] };
 let saveTimer = null;
 
 const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -241,9 +224,9 @@ $('#btnLogout').onclick = () => auth.signOut();
 if (auth) auth.onAuthStateChanged(async user => {
   if (user) { uid = user.uid; await load(); }
   else {
-    uid = null; data = { teamName: '', course: '', rows: [] };
+    uid = null; data = { rows: [] };
     $('#appView').classList.add('hidden'); $('#authView').classList.remove('hidden');
-    $('#btnLogout').classList.add('hidden'); $('#teamLabel').classList.add('hidden'); $('#saveStatus').classList.add('hidden');
+    $('#btnLogout').classList.add('hidden'); $('#saveStatus').classList.add('hidden');
   }
 });
 
@@ -251,15 +234,14 @@ if (auth) auth.onAuthStateChanged(async user => {
 async function load() {
   try {
     const snap = await db.collection('teams').doc(uid).get();
-    data = Object.assign({ teamName: '', course: '', rows: [] }, snap.exists ? snap.data() : {});
+    data = Object.assign({ rows: [] }, snap.exists ? snap.data() : {});
     if (!Array.isArray(data.rows)) data.rows = [];
   } catch (e) { console.error(e); alert('Errore nel caricamento dei dati: ' + e.message); return; }
   if (!data.rows.length) data.rows.push(newRow());
   $('#authView').classList.add('hidden'); $('#appView').classList.remove('hidden');
-  $('#btnLogout').classList.remove('hidden'); $('#teamLabel').classList.remove('hidden'); $('#saveStatus').classList.remove('hidden');
+  $('#btnLogout').classList.remove('hidden'); $('#saveStatus').classList.remove('hidden');
   setStatus('Salvato ✓');
-  renderHeader(); render();
-  if (!data.teamName) openProfile();
+  render();
 }
 function setStatus(t) { $('#saveStatus').textContent = t; }
 function scheduleSave() { setStatus('Salvataggio…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 700); }
@@ -267,7 +249,7 @@ async function save() {
   saveTimer = null;
   try {
     await db.collection('teams').doc(uid).set({
-      teamName: data.teamName, course: data.course, rows: data.rows,
+      rows: data.rows,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     setStatus('Salvato ✓');
@@ -276,9 +258,6 @@ async function save() {
 window.addEventListener('pagehide', () => { if (saveTimer) { clearTimeout(saveTimer); save(); } });
 
 // ---------- render ----------
-function renderHeader() {
-  $('#teamLabel').textContent = data.teamName ? data.teamName + (data.course ? ' · ' + data.course : '') : 'Imposta il nome del team';
-}
 function sel(r, f, opts) {
   return `<select data-f="${f}">` + opts.map(o => `<option value="${h(o)}"${o === (r[f] || '') ? ' selected' : ''}>${h(o) || '-'}</option>`).join('') + '</select>';
 }
@@ -332,16 +311,6 @@ $('#btnSort').onclick = () => {
 };
 $('#btnPrint').onclick = () => window.print();
 
-// ---------- profilo team ----------
-const dlg = $('#profileDlg');
-function openProfile() { $('#teamName').value = data.teamName || ''; $('#course').value = data.course || ''; dlg.showModal(); }
-$('#btnProfile').onclick = openProfile;
-$('#teamLabel').onclick = openProfile;
-$('#profileCancel').onclick = () => dlg.close();
-dlg.querySelector('form').onsubmit = () => {
-  data.teamName = $('#teamName').value.trim(); data.course = $('#course').value.trim();
-  renderHeader(); scheduleSave();
-};
 </script>
 </body>
 </html>
