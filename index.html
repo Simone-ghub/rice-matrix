@@ -84,6 +84,7 @@ dialog label{display:block;margin:10px 0 4px}
     <input id="password" type="password" autocomplete="current-password" required minlength="6">
     <div class="row">
       <button type="submit" class="primary" id="btnLogin">Accedi</button>
+      <button type="button" id="btnSignup">Registrati</button>
     </div>
     <button type="button" class="link" id="btnReset">Password dimenticata?</button>
     <div id="authErr" class="err"></div>
@@ -211,6 +212,12 @@ $('#authForm').onsubmit = async e => {
   e.preventDefault(); if (!auth) return;
   const [em, pw] = creds();
   try { await auth.signInWithEmailAndPassword(em, pw); } catch (err) { showErr(err); }
+};
+$('#btnSignup').onclick = async () => {
+  if (!auth) return;
+  const [em, pw] = creds();
+  if (!em || !pw) return showErr({ code: 'auth/missing-password' });
+  try { await auth.createUserWithEmailAndPassword(em, pw); } catch (err) { showErr(err); }
 };
 $('#btnReset').onclick = async () => {
   if (!auth) return;
